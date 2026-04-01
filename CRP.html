@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRP March 2026 Winner - INTERACTIVE GAME</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* FLOATING PARTICLES */
+        .particle {
+            position: absolute;
+            width: 6px; height: 6px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 50%;
+            animation: float 8s infinite linear;
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            background: rgba(255,255,255,0.95);
+            padding: 60px 40px;
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 500px;
+            z-index: 10;
+            position: relative;
+        }
+
+        h1 { font-size: 2.2em; color: #333; margin-bottom: 30px; font-weight: 700; }
+        
+        .option-box { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        
+        .btn {
+            padding: 18px 35px;
+            font-size: 1.2em;
+            font-weight: 600;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-yes {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            box-shadow: 0 10px 25px rgba(255,107,107,0.4);
+        }
+        .btn-yes:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(255,107,107,0.6); }
+
+        .btn-no {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            box-shadow: 0 10px 25px rgba(78,205,196,0.4);
+        }
+        .btn-no:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(78,205,196,0.6); }
+
+        /* FLOATING POPUP */
+        .popup {
+            position: fixed;
+            right: -400px;
+            top: 20%;
+            width: 320px;
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            padding: 35px;
+            border-radius: 25px;
+            box-shadow: 0 25px 70px rgba(255,107,107,0.5);
+            text-align: center;
+            z-index: 1000;
+            color: #d63031;
+            font-weight: 800;
+            font-size: 1.6em;
+            border: 4px solid rgba(255,255,255,0.9);
+            transition: right 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .popup.show { right: 5%; }
+        .popup .btn-small { 
+            margin: 15px 5px 0; 
+            padding: 12px 25px; 
+            font-size: 1em; 
+            border-radius: 12px; 
+        }
+
+        /* 🎮 INTERACTIVE GAME - RANDOM FALLING BUTTONS */
+        #gameArea {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1001;
+            display: none;
+        }
+        .game-btn {
+            position: absolute;
+            padding: 18px 36px;
+            font-size: 1.8em;
+            font-weight: 900;
+            border: none;
+            border-radius: 18px;
+            cursor: pointer;
+            pointer-events: all;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            animation: gameFall 3.5s linear infinite;
+            transform: rotate(0deg);
+            min-width: 120px;
+            text-align: center;
+        }
+        .game-yes {
+            background: linear-gradient(45deg, #ffd93d, #ffcc02);
+            color: #2d3436;
+            animation-duration: 3s;
+        }
+        .game-no {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+            animation-duration: 4s;
+        }
+        @keyframes gameFall {
+            0% { 
+                top: -8%; 
+                opacity: 0; 
+                transform: rotate(0deg) scale(0.7); 
+            }
+            8% { 
+                opacity: 1; 
+                transform: rotate(180deg) scale(1); 
+            }
+            92% { opacity: 1; }
+            100% { 
+                top: 108%; 
+                opacity: 0; 
+                transform: rotate(900deg) scale(0.6); 
+            }
+        }
+
+        /* SCREEN FIT WINNER IMAGE + CLOSE BUTTON */
+        #winner {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 90vw;
+            height: 90vh;
+            max-width: 700px;
+            max-height: 900px;
+            border-radius: 20px;
+            overflow: hidden;
+            z-index: 1003;
+            box-shadow: 0 60px 200px rgba(0,0,0,0.95);
+            transition: all 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            background: #000;
+        }
+        #winner.show { 
+            transform: translate(-50%, -50%) scale(1); 
+        }
+        #winnerImg { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            display: block;
+        }
+        #closeWinner {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.95);
+            border: none;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1004;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+        #closeWinner:hover {
+            background: #ff6b6b;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* MODAL */
+        #modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        .modal-content {
+            background: white;
+            padding: 45px;
+            border-radius: 25px;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            animation: modalSlide 0.4s ease;
+        }
+        @keyframes modalSlide {
+            from { transform: scale(0.7) translateY(-30px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .game-btn { font-size: 1.4em; padding: 15px 28px; min-width: 100px; }
+            h1 { font-size: 1.8em; }
+        }
+    </style>
+</head>
+<body>
+    <!-- FLOATING PARTICLES -->
+    <div class="particle" style="left:10%;animation-delay:0s;animation-duration:7s;"></div>
+    <div class="particle" style="left:20%;animation-delay:1.5s;animation-duration:9s;width:4px;height:4px;"></div>
+    <div class="particle" style="left:30%;animation-delay:3s;animation-duration:6s;background:rgba(255,193,7,0.8);"></div>
+    <div class="particle" style="left:70%;animation-delay:2s;animation-duration:10s;"></div>
+    <div class="particle" style="left:85%;animation-delay:4s;animation-duration:8s;width:8px;height:8px;"></div>
+    <div class="particle" style="left:95%;animation-delay:1s;animation-duration:12s;"></div>
+
+    <div class="container">
+        <h1>🏆 CRP WINNER REVEAL 🏆</h1>
+        <p style="font-size:1.2em;color:#555;margin-bottom:40px;line-height:1.5;">
+            Do you want to know who is the <strong>WINNER</strong> for the CRP for the month of <strong>MARCH 2026?</strong>
+        </p>
+        <div class="option-box">
+            <button class="btn btn-yes" onclick="showPopup1()">YES</button>
+            <button class="btn btn-no" onclick="showModal()">NO</button>
+        </div>
+    </div>
+
+    <!-- POPUP 1 -->
+    <div class="popup" id="popup1">
+        <div style="font-size:1.5em;margin-bottom:20px;">⚠️ ARE YOU SURE?</div>
+        <div style="font-size:1em;opacity:0.9;margin-bottom:25px;">Catch falling YES buttons anywhere!</div>
+        <button class="btn btn-yes btn-small" onclick="showPopup2()">START GAME!</button>
+        <button class="btn btn-no btn-small" onclick="hidePopup1()" style="background:rgba(255,255,255,0.3);margin-left:10px;">Cancel</button>
+    </div>
+
+    <!-- POPUP 2 -->
+    <div class="popup" id="popup2" style="background:linear-gradient(135deg,#00b894,#00a085);color:white;top:15%;">
+        🎮 INTERACTIVE CHALLENGE! 🎮
+        <div style="font-size:1.1em;margin-top:15px;opacity:0.95;">Catch YES buttons anywhere on screen!</div>
+        <button class="btn btn-yes btn-small" onclick="startGame()" style="background:rgba(255,255,255,0.3);margin-top:20px;">PLAY!</button>
+    </div>
+
+    <!-- GAME AREA -->
+    <div id="gameArea"></div>
+
+    <!-- WINNER IMAGE + CLOSE BUTTON -->
+    <div id="winner">
+        <button id="closeWinner" onclick="closeWinner()">✕</button>
+        <img id="winnerImg" src="crp_march2026.png" alt="CRP Winner">
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal">
+        <div class="modal-content">
+            <h2 style="color:#2d3436;margin-bottom:20px;font-size:2em;">🤔 Why Not?</h2>
+            <p style="font-size:1.3em;color:#636e72;line-height:1.6;margin-bottom:30px;">
+                Play the game and catch YES buttons to see the winner! 🔥
+            </p>
+            <button class="btn btn-yes" onclick="hideModal()" style="padding:15px 40px;font-size:1.1em;">PLAY NOW!</button>
+        </div>
+    </div>
+
+    <script>
+        let gameInterval;
+        let gameActive = false;
+        let buttonCount = 0;
+
+        function showPopup1() {
+            document.getElementById('popup1').classList.add('show');
+        }
+
+        function hidePopup1() {
+            document.getElementById('popup1').classList.remove('show');
+        }
+
+        function showPopup2() {
+            document.getElementById('popup1').classList.remove('show');
+            setTimeout(() => document.getElementById('popup2').classList.add('show'), 400);
+        }
+
+        function startGame() {
+            document.getElementById('popup2').classList.remove('show');
+            gameActive = true;
+            document.getElementById('gameArea').style.display = 'block';
+            
+            // ENDLESS RANDOM BUTTONS
+            gameInterval = setInterval(spawnRandomButton, 600);
+            
+            // Initial burst
+            for(let i = 0; i < 8; i++) {
+                setTimeout(spawnRandomButton, i * 150);
+            }
+        }
+
+        function spawnRandomButton() {
+            if (!gameActive) return;
+            
+            const gameArea = document.getElementById('gameArea');
+            const btn = document.createElement('button');
+            buttonCount++;
+            btn.id = 'btn' + buttonCount;
+            btn.className = 'game-btn';
+            
+            // 75% YES, 25% NO
+            const isYes = Math.random() > 0.25;
+            btn.innerHTML = isYes ? 'YES' : 'NO';
+            
+            // COMPLETELY RANDOM POSITION & SIZE
+            btn.style.left = Math.random() * 85 + '%';
+            btn.style.top = '-10%';
+            btn.style.fontSize = (1.4 + Math.random() * 1.2) + 'em';
+            btn.style.padding = '16px ' + (28 + Math.random() * 20) + 'px';
+            btn.style.animationDuration = (2.5 + Math.random() * 2.5) + 's';
+            btn.style.animationDelay = '0s';
+            
+            if (isYes) {
+                btn.classList.add('game-yes');
+                btn.onclick = function() { catchYes(this); };
+            } else {
+                btn.classList.add('game-no');
+                btn.onclick = function() { catchNo(this); };
+            }
+            
+            gameArea.appendChild(btn);
+            
+            // Auto remove
+            setTimeout(() => {
+                if (btn.parentNode && gameActive) btn.remove();
+            }, 5500);
+        }
+
+        function catchYes(btn) {
+            btn.style.background = '#00ff88';
+            btn.innerHTML = 'GOT IT! 🎉';
+            btn.style.pointerEvents = 'none';
+            
+            gameActive = false;
+            clearInterval(gameInterval);
+            document.getElementById('gameArea').innerHTML = '';
+            document.getElementById('gameArea').style.display = 'none';
+            
+            // MASSIVE CONFETTI
+            for(let i = 0; i < 80; i++) {
+                setTimeout(createConfetti, i * 30);
+            }
+            
+            setTimeout(() => {
+                document.getElementById('winner').classList.add('show');
+            }, 600);
+        }
+
+        function catchNo(btn) {
+            btn.style.background = '#ff4444';
+            btn.innerHTML = 'NOPE! 😅';
+            btn.style.pointerEvents = 'none';
+            setTimeout(() => btn.remove(), 800);
+        }
+
+        function closeWinner() {
+            document.getElementById('winner').classList.remove('show');
+        }
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.style.cssText = `
+                position:fixed;top:50%;left:50%;
+                width:14px;height:14px;border-radius:50%;
+                background:${['#ff6b6b','#4ecdc4','#ffeaa7','#fdcb6e','#a29bfe','#00ff88'][Math.random()*6|0]};
+                pointer-events:none;z-index:1004;
+                animation:explode 2s ease-out forwards;
+                box-shadow: 0 0 10px currentColor;
+            `;
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 2000);
+        }
+
+        function showModal() {
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function hideModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // ESCAPE & CLICK OUTSIDE
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                gameActive = false;
+                clearInterval(gameInterval);
+                document.getElementById('gameArea').innerHTML = '';
+                document.getElementById('gameArea').style.display = 'none';
+                document.getElementById('popup1').classList.remove('show');
+                document.getElementById('popup2').classList.remove('show');
+                hideModal();
+                closeWinner();
+            }
+        });
+
+        document.getElementById('winner').onclick = function(e) {
+            if (e.target === this) closeWinner();
+        };
+
+        // Explode animation
+        const style = document.createElement('style');
+        style.textContent = `@keyframes explode {
+            0% { transform: translate(-50%,-50%) scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(${(Math.random()*600-300)}px,${(Math.random()*600-300)}px) rotate(720deg) scale(0); opacity: 0; }
+        }`;
+        document.head.appendChild(style);
+    </script>
+</>
